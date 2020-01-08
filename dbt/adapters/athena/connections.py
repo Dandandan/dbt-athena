@@ -45,7 +45,7 @@ class AthenaCredentials(Credentials):
         return 'athena'
 
     def _connection_keys(self):
-        return ('s3_staging_dir')
+        return ('s3_staging_dir', 'database', 'schema', 'region_name')
 
 
 class ConnectionWrapper(object):
@@ -66,7 +66,6 @@ class ConnectionWrapper(object):
         return self
 
     def cancel(self):
-        pass
         if self._cursor is not None:
             self._cursor.cancel()
 
@@ -75,16 +74,10 @@ class ConnectionWrapper(object):
         self.handle.close()
 
     def commit(self):
-        pass
-        #self.handle.commit()
+        logger.debug("NotImplemented: commit")
 
     def rollback(self):
-        pass
-        self.handle.rollback()
-
-    def start_transaction(self):
-        pass
-        #self.handle.start_transaction()
+        logger.debug("NotImplemented: rollback")
 
     def fetchall(self):
         if self._cursor is None:
@@ -147,14 +140,16 @@ class AthenaConnectionManager(SQLConnectionManager):
             raise RuntimeException(to_string(exc))
 
     def add_begin_query(self):
-        connection = self.get_thread_connection()
-        with self.exception_handler('handle.start_transaction()'):
-            connection.handle.start_transaction()
+        logger.debug("NotImplemented: add_begin_query")
 
     def add_commit_query(self):
-        connection = self.get_thread_connection()
-        with self.exception_handler('handle.commit()'):
-            connection.handle.commit()
+        logger.debug("NotImplemented: add_commit_query")
+
+    def commit(self, *args, **kwargs):
+        logger.debug("NotImplemented: commit")
+
+    def rollback(self, *args, **kwargs):
+        logger.debug("NotImplemented: rollback")
 
     @classmethod
     def open(cls, connection):
