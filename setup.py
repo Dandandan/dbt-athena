@@ -8,9 +8,9 @@ with open(os.path.join(this_directory, 'README.md')) as f:
     long_description = f.read()
 
 
-package_name = "dbt-presto"
+package_name = "dbt-athena"
 package_version = "0.14.0"
-description = """The presto adpter plugin for dbt (data build tool)"""
+description = """The athena adpter plugin for dbt (data build tool)"""
 
 setup(
     name=package_name,
@@ -27,13 +27,13 @@ setup(
     packages=find_packages(),
     package_data={
         'dbt': [
-            'include/presto/dbt_project.yml',
-            'include/presto/macros/*.sql',
-            'include/presto/macros/*/*.sql',
+            'include/athena/dbt_project.yml',
+            'include/athena/macros/*.sql',
+            'include/athena/macros/*/*.sql',
         ]
     },
     install_requires=[
         'dbt-core=={}'.format(package_version),
-        'presto-python-client',
+        'PyAthenaJDBC',
     ]
 )
