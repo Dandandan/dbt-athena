@@ -12,9 +12,10 @@ A dbt profile can be configured to run against Presto using the following config
 
 | Option  | Description                                        | Required?               | Example                  |
 |---------|----------------------------------------------------|-------------------------|--------------------------|
-| s3_staging_dir  | The location where Athena stores meta info | Optional(default=`none`)  | `none`|`kerberos` |
+| s3_staging_dir  | The location where Athena stores meta info | Required  | s3://bucket/staging |
 | database  | Specify the database to build models into | Required  | `analytics` |
 | schema  | Specify the schema to build models into | Required | `dbt_drew` |
+| region_name | Specify in which AWS region it should connect | Required | `eu-west-1` |
 | threads    | How many threads dbt should use | Optional(default=`1`) | `8` |
 
 
