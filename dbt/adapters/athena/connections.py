@@ -10,13 +10,10 @@ from dbt.compat import basestring, NUMBERS, to_string
 from dbt.exceptions import RuntimeException
 from dbt.logger import GLOBAL_LOGGER as logger
 
-import prestodb
-from prestodb.transaction import IsolationLevel
-from prestodb.auth import KerberosAuthentication
 import sqlparse
+from pyathenajdbc import connect
 
-
-PRESTO_CREDENTIALS_CONTRACT = {
+ATHENA_CREDENTIALS_CONTRACT = {
     'type': 'object',
     'additionalProperties': False,
     'properties': {
@@ -26,43 +23,33 @@ PRESTO_CREDENTIALS_CONTRACT = {
         'schema': {
             'type': 'string',
         },
-        'host': {
+        's3_staging_dir': {
             'type': 'string',
         },
-        'port': {
-            'type': 'integer',
-            'minimum': 0,
-            'maximum': 65535,
-        },
-        'method': {
-            # TODO: what do most people use? Kerberos is what the official one
-            # implements.
-            'enum': ['none', 'kerberos'],
-        },
-        'userinfo-json': {
-            'type': 'object',
-        },
+        'region_name': {
+            'type': 'string'
+        }
     },
-    'required': ['database', 'schema', 'host', 'port'],
+    'required': ['s3_staging_dir', 'database', 'schema', 'region_name'],
 }
 
 
-class PrestoCredentials(Credentials):
-    SCHEMA = PRESTO_CREDENTIALS_CONTRACT
+class AthenaCredentials(Credentials):
+    SCHEMA = ATHENA_CREDENTIALS_CONTRACT
     ALIASES = {
         'catalog': 'database',
     }
 
     @property
     def type(self):
-        return 'presto'
+        return 'athena'
 
     def _connection_keys(self):
-        return ('host', 'port', 'database', 'username')
+        return ('s3_staging_dir')
 
 
 class ConnectionWrapper(object):
-    """Wrap a Presto connection in a way that accomplishes two tasks:
+    """Wrap a Athena connection in a way that accomplishes two tasks:
 
         - prefetch results from execute() calls so that presto calls actually
             persist to the db but then present the usual cursor interface
@@ -79,6 +66,7 @@ class ConnectionWrapper(object):
         return self
 
     def cancel(self):
+        pass
         if self._cursor is not None:
             self._cursor.cancel()
 
@@ -87,13 +75,16 @@ class ConnectionWrapper(object):
         self.handle.close()
 
     def commit(self):
-        self.handle.commit()
+        pass
+        #self.handle.commit()
 
     def rollback(self):
+        pass
         self.handle.rollback()
 
     def start_transaction(self):
-        self.handle.start_transaction()
+        pass
+        #self.handle.start_transaction()
 
     def fetchall(self):
         if self._cursor is None:
@@ -141,8 +132,8 @@ class ConnectionWrapper(object):
             raise ValueError('Cannot escape {}'.format(type(value)))
 
 
-class PrestoConnectionManager(SQLConnectionManager):
-    TYPE = 'presto'
+class AthenaConnectionManager(SQLConnectionManager):
+    TYPE = 'athena'
 
     @contextmanager
     def exception_handler(self, sql):
@@ -172,24 +163,13 @@ class PrestoConnectionManager(SQLConnectionManager):
             return connection
 
         credentials = connection.credentials
-        if credentials.method == 'kerberos':
-            auth = KerberosAuthentication()
-        else:
-            auth = prestodb.constants.DEFAULT_AUTH
 
-        # it's impossible for presto to fail here as 'connections' are actually
-        # just cursor factories.
-        presto_conn = prestodb.dbapi.connect(
-            host=credentials.host,
-            port=credentials.get('port', 8080),
-            user=credentials.get('username', getuser()),
-            catalog=credentials.database,
-            schema=credentials.schema,
-            auth=auth,
-            isolation_level=IsolationLevel.SERIALIZABLE,
+        conn = connect(
+            s3_staging_dir=credentials.s3_staging_dir,
+            region_name=credentials.region_name
         )
         connection.state = 'open'
-        connection.handle = ConnectionWrapper(presto_conn)
+        connection.handle = ConnectionWrapper(conn)
         return connection
 
     @classmethod
@@ -198,7 +178,8 @@ class PrestoConnectionManager(SQLConnectionManager):
         return 'OK'
 
     def cancel(self, connection):
-        connection.handle.cancel()
+        pass
+        #connection.handle.cancel()
 
     def add_query(self, sql, auto_begin=True,
                   bindings=None, abridge_sql_log=False):
@@ -222,7 +203,7 @@ class PrestoConnectionManager(SQLConnectionManager):
             if without_comments == "":
                 continue
 
-            parent = super(PrestoConnectionManager, self)
+            parent = super(AthenaConnectionManager, self)
             connection, cursor = parent.add_query(
                 individual_query, auto_begin, bindings,
                 abridge_sql_log

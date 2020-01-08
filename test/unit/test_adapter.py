@@ -2,7 +2,7 @@ import mock
 import unittest
 import dbt.adapters
 import dbt.flags as flags
-from dbt.adapters.presto import PrestoAdapter
+from dbt.adapters.athena import AthenaAdapter
 import agate
 
 from .utils import config_from_parts_or_dicts, inject_adapter
@@ -15,7 +15,7 @@ class TestPrestoAdapter(unittest.TestCase):
         profile_cfg = {
             'outputs': {
                 'test': {
-                    'type': 'presto',
+                    'type': 'athena',
                     'catalog': 'prestodb',
                     'host': 'database',
                     'port': 5439,
