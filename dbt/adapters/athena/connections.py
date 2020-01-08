@@ -173,8 +173,7 @@ class AthenaConnectionManager(SQLConnectionManager):
         return 'OK'
 
     def cancel(self, connection):
-        pass
-        #connection.handle.cancel()
+        connection.handle.cancel()
 
     def add_query(self, sql, auto_begin=True,
                   bindings=None, abridge_sql_log=False):
