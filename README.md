@@ -22,9 +22,9 @@ A dbt profile can be configured to run against Presto using the following config
 **Example profiles.yml entry:**
 ```
 my-athena-db:
-  target: dev
+  target: awscatalog
   outputs:
-    dev:
+    awscatalog:
       type: athena
       database: awscatalog
       schema: dbt_dbanin
