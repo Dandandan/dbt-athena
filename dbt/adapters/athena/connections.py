@@ -161,7 +161,8 @@ class AthenaConnectionManager(SQLConnectionManager):
 
         conn = connect(
             s3_staging_dir=credentials.s3_staging_dir,
-            region_name=credentials.region_name
+            region_name=credentials.region_name,
+            schema_name=credentials.database
         )
         connection.state = 'open'
         connection.handle = ConnectionWrapper(conn)
