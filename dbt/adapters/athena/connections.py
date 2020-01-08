@@ -11,7 +11,7 @@ from dbt.exceptions import RuntimeException
 from dbt.logger import GLOBAL_LOGGER as logger
 
 import sqlparse
-from pyathenajdbc import connect
+from pyathena import connect
 
 ATHENA_CREDENTIALS_CONTRACT = {
     'type': 'object',
