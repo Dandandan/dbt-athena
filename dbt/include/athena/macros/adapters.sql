@@ -8,7 +8,7 @@
 {%- endmacro %}
 
 
-{% macro presto__get_columns_in_relation(relation) -%}
+{% macro athena__get_columns_in_relation(relation) -%}
   {% call statement('get_columns_in_relation', fetch_result=True) %}
       select
           column_name,
@@ -38,7 +38,7 @@
 {% endmacro %}
 
 
-{% macro presto__list_relations_without_caching(information_schema, schema) %}
+{% macro athena__list_relations_without_caching(information_schema, schema) %}
   {% call statement('list_relations_without_caching', fetch_result=True) -%}
     select
       table_catalog as database,
@@ -55,13 +55,13 @@
 {% endmacro %}
 
 
-{% macro presto__reset_csv_table(model, full_refresh, old_relation) %}
+{% macro athena__reset_csv_table(model, full_refresh, old_relation) %}
     {{ adapter.drop_relation(old_relation) }}
     {{ return(create_csv_table(model)) }}
 {% endmacro %}
 
 
-{% macro presto__create_table_as(temporary, relation, sql) -%}
+{% macro athena__create_table_as(temporary, relation, sql) -%}
   create table
     {{ relation }}
   as (
@@ -70,33 +70,33 @@
 {% endmacro %}
 
 
-{% macro presto__drop_relation(relation) -%}
+{% macro athena__drop_relation(relation) -%}
   {% call statement('drop_relation', auto_begin=False) -%}
     drop {{ relation.type }} if exists {{ relation }}
   {%- endcall %}
 {% endmacro %}
 
 
-{% macro presto__drop_schema(database_name, schema_name) -%}
+{% macro athena__drop_schema(database_name, schema_name) -%}
   {%- call statement('drop_schema') -%}
     drop schema if exists {{database_name}}.{{schema_name}}
   {% endcall %}
 {% endmacro %}
 
 
-{% macro presto__rename_relation(from_relation, to_relation) -%}
+{% macro athena__rename_relation(from_relation, to_relation) -%}
   {% call statement('rename_relation') -%}
     alter table {{ from_relation }} rename to {{ to_relation }}
   {%- endcall %}
 {% endmacro %}
 
 
-{% macro presto__load_csv_rows(model) %}
+{% macro athena__load_csv_rows(model) %}
   {{ return(basic_load_csv_rows(model, 1000)) }}
 {% endmacro %}
 
 
-{% macro presto__list_schemas(database) -%}
+{% macro athena__list_schemas(database) -%}
   {% call statement('list_schemas', fetch_result=True, auto_begin=False) %}
     select distinct schema_name
     from {{ information_schema_name(database) }}.schemata
@@ -105,7 +105,7 @@
 {% endmacro %}
 
 
-{% macro presto__check_schema_exists(information_schema, schema) -%}
+{% macro athena__check_schema_exists(information_schema, schema) -%}
   {% call statement('check_schema_exists', fetch_result=True, auto_begin=False) -%}
         select count(*)
         from {{ information_schema }}.schemata

@@ -1,5 +1,5 @@
 
-{% macro presto__get_catalog(information_schemas) -%}
+{% macro athena__get_catalog(information_schemas) -%}
     {%- call statement('catalog', fetch_result=True) -%}
     select * from (
     {% for information_schema in information_schemas %}

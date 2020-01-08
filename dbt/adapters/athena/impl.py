@@ -1,11 +1,11 @@
 from dbt.adapters.sql import SQLAdapter
-from dbt.adapters.presto import PrestoConnectionManager
+from dbt.adapters.athena import AthenaConnectionManager
 
 import agate
 
 
-class PrestoAdapter(SQLAdapter):
-    ConnectionManager = PrestoConnectionManager
+class AthenaAdapter(SQLAdapter):
+    ConnectionManager = AthenaConnectionManager
 
     @classmethod
     def date_function(cls):
@@ -37,7 +37,7 @@ class PrestoAdapter(SQLAdapter):
         )
         for relation in relations:
             self.drop_relation(relation, model_name=model_name)
-        super(PrestoAdapter, self).drop_schema(
+        super(AthenaAdapter, self).drop_schema(
             database=database,
             schema=schema,
             model_name=model_name
