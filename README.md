@@ -1,9 +1,9 @@
-## dbt-presto ([docs](https://docs.getdbt.com/docs/profile-presto#section-required-configuration))
+## dbt-athena (Work-in-progress) ([docs](https://docs.getdbt.com/docs/profile-presto#section-required-configuration))
 
 ### Installation
 This plugin can be installed via pip:
 ```
-$ pip install dbt-presto
+$ pip install dbt-athena
 ```
 
 ### Configuring your profile
@@ -42,17 +42,6 @@ The following features of dbt are not implemented on Presto:
 
 
 If you are interested in helping to add support for this functionality in dbt on Presto, please [open an issue](https://github.com/fishtown-analytics/dbt-athena/issues/new)!
-
-#### Required configuration
-<!-- dbt fundamentally works by dropping and creating tables and views in databases.
-As such, the following Presto configs must be set for dbt to work properly on Presto:
-
-```
-hive.metastore-cache-ttl=0s
-hive.metastore-refresh-interval = 5s
-hive.allow-drop-table=true
-hive.allow-rename-table=true
-``` -->
 
 
 ### Reporting bugs and contributing code
