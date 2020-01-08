@@ -1,6 +1,5 @@
 from dbt.adapters.sql import SQLAdapter
 from dbt.adapters.athena import AthenaConnectionManager
-
 import agate
 
 
