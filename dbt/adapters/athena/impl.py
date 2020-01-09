@@ -1,11 +1,13 @@
 from dbt.adapters.sql import SQLAdapter
 from dbt.adapters.athena import AthenaConnectionManager
+from dbt.adapters.athena.relation import AthenaRelation
+
 import agate
 
 
 class AthenaAdapter(SQLAdapter):
     ConnectionManager = AthenaConnectionManager
-
+    Relation = AthenaRelation
     @classmethod
     def date_function(cls):
         return 'datenow()'
