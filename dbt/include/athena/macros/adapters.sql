@@ -86,7 +86,7 @@
 
 {% macro athena__rename_relation(from_relation, to_relation) -%}
   {% call statement('rename_relation') -%}
-    -- alter {{ from_relation.type }} {{ from_relation }} rename to {{ to_relation }}
+     alter {{ from_relation.type }} {{ from_relation }} rename to {{ to_relation }}
   {%- endcall %}
 {% endmacro %}
 
