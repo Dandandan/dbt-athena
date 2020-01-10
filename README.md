@@ -3,7 +3,7 @@
 ### Installation
 This plugin can be installed via pip:
 ```
-$ pip install dbt-athena
+$ pip install git+https://github.com/Dandandan/dbt-athena.git
 ```
 
 ### Configuring your profile
