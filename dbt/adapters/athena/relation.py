@@ -6,11 +6,11 @@ class AthenaRelation(BaseRelation):
         'metadata': {
             'type': 'AthenaRelation'
         },
-        'quote_character': '"',
+        'quote_character': '',
         'quote_policy': {
-            'database': True,
-            'schema': True,
-            'identifier': True,
+            'database': False,
+            'schema': False,
+            'identifier': False,
         },
         'include_policy': {
             'database': False,

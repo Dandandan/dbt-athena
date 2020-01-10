@@ -43,6 +43,9 @@ The following features of dbt are not implemented on Presto:
 
 If you are interested in helping to add support for this functionality in dbt on Presto, please [open an issue](https://github.com/fishtown-analytics/dbt-athena/issues/new)!
 
+Known issues:
+
+- Quoting is not supported
 
 ### Reporting bugs and contributing code
 
