@@ -42,7 +42,7 @@
       Since dbt uses WRITE_TRUNCATE mode for tables, we only need to drop this thing
       if it is not a table. If it _is_ already a table, then we can overwrite it without downtime
   #}
-  {%- if old_relation_exists is not none -%}
+  {%- if old_relation is not none -%}
       {{ adapter.drop_relation(old_relation) }}
   {%- endif -%}
 

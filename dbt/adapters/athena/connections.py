@@ -3,49 +3,99 @@ from contextlib import contextmanager
 from datetime import datetime
 from getpass import getuser
 import re
+import decimal
+from dataclasses import dataclass
+from typing import Tuple, Optional
 
 from dbt.adapters.base import Credentials
 from dbt.adapters.sql import SQLConnectionManager
-from dbt.compat import basestring, NUMBERS, to_string
 from dbt.exceptions import RuntimeException
 from dbt.logger import GLOBAL_LOGGER as logger
 
 import sqlparse
 from pyathena import connect
-
-ATHENA_CREDENTIALS_CONTRACT = {
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': {
-        'database': {
-            'type': 'string',
-        },
-        'schema': {
-            'type': 'string',
-        },
-        's3_staging_dir': {
-            'type': 'string',
-        },
-        'region_name': {
-            'type': 'string'
-        }
-    },
-    'required': ['s3_staging_dir', 'database', 'schema', 'region_name'],
-}
+from pyathena.async_cursor import AsyncCursor
+from pyathena.error import OperationalError
+from pyathena.model import AthenaQueryExecution
 
 
+@dataclass
 class AthenaCredentials(Credentials):
-    SCHEMA = ATHENA_CREDENTIALS_CONTRACT
-    ALIASES = {
-        'catalog': 'database',
+    database: str
+    schema: str
+    s3_staging_dir: str
+    region_name: str
+
+    _ALIASES = {
+        'catalog': 'database'
     }
 
     @property
-    def type(self):
+    def type(self) -> str:
         return 'athena'
 
-    def _connection_keys(self):
+    def _connection_keys(self) -> Tuple[str]:
         return ('s3_staging_dir', 'database', 'schema', 'region_name')
+
+
+class CursorWrapper(object):
+    def __init__(self, cursor):
+        self._cursor = cursor
+        self._query_id = None
+        self._fetch_result = None
+        self._state = None
+
+    def fetchall(self):
+        if self._fetch_result is not None:
+            ret = self._fetch_result
+            self._fetch_result = None
+            return ret
+
+        return None
+
+    def execute(self, sql, bindings=None):
+        if bindings is not None:
+            # presto doesn't actually pass bindings along so we have to do the
+            # escaping and formatting ourselves
+            bindings = tuple(self._escape_value(b) for b in bindings)
+            sql = sql % bindings
+
+        query_id, future = self._cursor.execute(sql)
+        result_set = future.result()
+
+        if result_set.state != AthenaQueryExecution.STATE_SUCCEEDED:
+            raise OperationalError(result_set.state_change_reason)
+
+        self._fetch_result = result_set.fetchall()
+        self._query_id = query_id
+        self._state = result_set.state
+        return self
+
+    @property
+    def description(self):
+        return self._cursor.description(self._query_id).result()
+
+    @property
+    def state(self):
+        return self._state
+
+    @classmethod
+    def _escape_value(cls, value):
+        """A not very comprehensive system for escaping bindings.
+
+        I think "'" (a single quote) is the only character that matters.
+        """
+        if value is None:
+            return 'NULL'
+        elif isinstance(value, str):
+            return "'{}'".format(value.replace("'", "''"))
+        elif isinstance(value, (int,float,decimal.Decimal)):
+            return value
+        elif isinstance(value, datetime):
+            time_formatted = value.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+            return "TIMESTAMP '{}'".format(time_formatted)
+        else:
+            raise ValueError('Cannot escape {}'.format(type(value)))
 
 
 class ConnectionWrapper(object):
@@ -58,12 +108,11 @@ class ConnectionWrapper(object):
     """
     def __init__(self, handle):
         self.handle = handle
-        self._cursor = None
-        self._fetch_result = None
+        # TODO: make it configurable through Athena credentials!
+        self._cursor = handle.cursor(max_workers=10)
 
     def cursor(self):
-        self._cursor = self.handle.cursor()
-        return self
+        return CursorWrapper(self._cursor)
 
     def cancel(self):
         if self._cursor is not None:
@@ -79,51 +128,6 @@ class ConnectionWrapper(object):
     def rollback(self):
         logger.debug("NotImplemented: rollback")
 
-    def fetchall(self):
-        if self._cursor is None:
-            return None
-
-        if self._fetch_result is not None:
-            ret = self._fetch_result
-            self._fetch_result = None
-            return ret
-
-        return None
-
-    def execute(self, sql, bindings=None):
-
-        if bindings is not None:
-            # presto doesn't actually pass bindings along so we have to do the
-            # escaping and formatting ourselves
-            bindings = tuple(self._escape_value(b) for b in bindings)
-            sql = sql % bindings
-
-        result = self._cursor.execute(sql)
-        self._fetch_result = self._cursor.fetchall()
-        return result
-
-    @property
-    def description(self):
-        return self._cursor.description
-
-    @classmethod
-    def _escape_value(cls, value):
-        """A not very comprehensive system for escaping bindings.
-
-        I think "'" (a single quote) is the only character that matters.
-        """
-        if value is None:
-            return 'NULL'
-        elif isinstance(value, basestring):
-            return "'{}'".format(value.replace("'", "''"))
-        elif isinstance(value, NUMBERS):
-            return value
-        elif isinstance(value, datetime):
-            time_formatted = value.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-            return "TIMESTAMP '{}'".format(time_formatted)
-        else:
-            raise ValueError('Cannot escape {}'.format(type(value)))
-
 
 class AthenaConnectionManager(SQLConnectionManager):
     TYPE = 'athena'
@@ -137,7 +141,7 @@ class AthenaConnectionManager(SQLConnectionManager):
         except Exception as exc:
             logger.debug("Error while running:\n{}".format(sql))
             logger.debug(exc)
-            raise RuntimeException(to_string(exc))
+            raise RuntimeException(str(exc))
 
     def add_begin_query(self):
         logger.debug("NotImplemented: add_begin_query")
@@ -162,7 +166,8 @@ class AthenaConnectionManager(SQLConnectionManager):
         conn = connect(
             s3_staging_dir=credentials.s3_staging_dir,
             region_name=credentials.region_name,
-            schema_name=credentials.database
+            schema_name=credentials.database,
+            cursor_class=AsyncCursor
         )
         connection.state = 'open'
         connection.handle = ConnectionWrapper(conn)
@@ -170,8 +175,10 @@ class AthenaConnectionManager(SQLConnectionManager):
 
     @classmethod
     def get_status(cls, cursor):
-        # this is lame, but the cursor doesn't give us anything useful.
-        return 'OK'
+        if cursor.state == AthenaQueryExecution.STATE_SUCCEEDED:
+            return 'OK'
+        else:
+            return 'ERROR'
 
     def cancel(self, connection):
         connection.handle.cancel()
