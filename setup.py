@@ -34,6 +34,6 @@ setup(
     },
     install_requires=[
         'dbt-core=={}'.format(package_version),
-        'PyAthenaJDBC',
+        'PyAthena',
     ]
 )

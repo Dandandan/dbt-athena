@@ -1,5 +1,5 @@
 
-name: dbt_presto
+name: dbt_athena
 version: 1.0
 
 macro-paths: ["macros"]
