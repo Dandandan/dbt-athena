@@ -25,6 +25,7 @@ class AthenaCredentials(Credentials):
     schema: str
     s3_staging_dir: str
     region_name: str
+    threads: int = 1
 
     _ALIASES = {
         'catalog': 'database'
@@ -106,10 +107,10 @@ class ConnectionWrapper(object):
         - provide `cancel()` on the same object as `commit()`/`rollback()`/...
 
     """
-    def __init__(self, handle):
+    def __init__(self, handle, max_workers: int):
         self.handle = handle
         # TODO: make it configurable through Athena credentials!
-        self._cursor = handle.cursor(max_workers=10)
+        self._cursor = handle.cursor(max_workers=max_workers)
 
     def cursor(self):
         return CursorWrapper(self._cursor)
@@ -133,7 +134,7 @@ class AthenaConnectionManager(SQLConnectionManager):
     TYPE = 'athena'
 
     @contextmanager
-    def exception_handler(self, sql):
+    def exception_handler(self, sql: str):
         try:
             yield
         # TODO: introspect into `DatabaseError`s and expose `errorName`,
@@ -170,7 +171,7 @@ class AthenaConnectionManager(SQLConnectionManager):
             cursor_class=AsyncCursor
         )
         connection.state = 'open'
-        connection.handle = ConnectionWrapper(conn)
+        connection.handle = ConnectionWrapper(conn, credentials.threads)
         return connection
 
     @classmethod
