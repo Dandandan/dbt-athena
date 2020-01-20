@@ -35,10 +35,14 @@
 
             )
 
-            select *
+            select tables.*,
+                   columns.column_name,
+                   columns.column_index,
+                   columns.column_type,
+                   columns.column_comment
             from tables
             join columns using ("table_database", "table_schema", "table_name")
-            where "table_schema" != 'information_schema'
+            where "columns"."table_schema" != 'information_schema'
             order by "column_index"
         )
         {% if not loop.last %} union all {% endif %}
