@@ -65,7 +65,10 @@
   create table
     {{ relation }}
   as (
-    {{ sql }}
+    -- wrapping to select allows to use "with" statements inside "create table"
+    select * from (
+        {{ sql }}
+    )
   );
 {% endmacro %}
 
@@ -79,7 +82,12 @@
 
 {% macro athena__drop_schema(database_name, schema_name) -%}
   {%- call statement('drop_schema') -%}
-    drop schema if exists {{database_name}}.{{schema_name}}
+    drop schema if exists {{schema_name}}
+  {% endcall %}
+{% endmacro %}
+{% macro athena__create_schema(database_name, schema_name) -%}
+  {%- call statement('create_schema') -%}
+    create schema if not exists {{schema_name}}
   {% endcall %}
 {% endmacro %}
 
