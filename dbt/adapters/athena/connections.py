@@ -17,6 +17,7 @@ from pyathena import connect
 from pyathena.async_cursor import AsyncCursor
 from pyathena.error import OperationalError
 from pyathena.model import AthenaQueryExecution
+from pyathena.util import RetryConfig
 
 
 @dataclass
@@ -26,6 +27,8 @@ class AthenaCredentials(Credentials):
     s3_staging_dir: str
     region_name: str
     threads: int = 1
+    max_retry_number: int = 5
+    max_retry_delay: int = 100
 
     _ALIASES = {
         'catalog': 'database'
@@ -36,7 +39,12 @@ class AthenaCredentials(Credentials):
         return 'athena'
 
     def _connection_keys(self) -> Tuple[str]:
-        return ('s3_staging_dir', 'database', 'schema', 'region_name')
+        return (
+            's3_staging_dir',
+            'database',
+            'schema',
+            'region_name'
+        )
 
 
 class CursorWrapper(object):
@@ -168,7 +176,8 @@ class AthenaConnectionManager(SQLConnectionManager):
             s3_staging_dir=credentials.s3_staging_dir,
             region_name=credentials.region_name,
             schema_name=credentials.database,
-            cursor_class=AsyncCursor
+            cursor_class=AsyncCursor,
+            retry_config=RetryConfig(attempt=credentials.max_retry_number, max_delay=credentials.max_retry_delay)
         )
         connection.state = 'open'
         connection.handle = ConnectionWrapper(conn, credentials.threads)
