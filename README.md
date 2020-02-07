@@ -19,6 +19,8 @@ A dbt profile can be configured to run against Presto using the following config
 | schema  | Specify the schema to build models into | Required | `dbt_drew` |
 | region_name | Specify in which AWS region it should connect | Required | `eu-west-1` |
 | threads    | How many threads dbt should use | Optional(default=`1`) | `8` |
+| max_retry_number | Number for retries for exponential backoff | Optional(default=`5`) | `8` |
+| max_retry_delay  | Maximum delay for exponential backoff in seconds | Optional(default=`100`) | `8` |
 
 
 **Example profiles.yml entry:**
