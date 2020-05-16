@@ -1,14 +1,9 @@
-from contextlib import contextmanager
-from datetime import datetime
-import re
 import decimal
+import re
+from contextlib import contextmanager
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Tuple
-
-from dbt.adapters.base import Credentials
-from dbt.adapters.sql import SQLConnectionManager
-from dbt.exceptions import RuntimeException
-from dbt.logger import GLOBAL_LOGGER as logger
 
 import sqlparse
 from pyathena import connect
@@ -17,11 +12,16 @@ from pyathena.error import OperationalError
 from pyathena.model import AthenaQueryExecution
 from pyathena.util import RetryConfig
 
+from dbt.adapters.base import Credentials
+from dbt.adapters.sql import SQLConnectionManager
+from dbt.exceptions import RuntimeException
+from dbt.logger import GLOBAL_LOGGER as logger
+
 
 @dataclass
 class AthenaCredentials(Credentials):
-    catalog: str
     database: str
+    schema: str
     s3_staging_dir: str
     region_name: str
     threads: int = 1
@@ -33,7 +33,7 @@ class AthenaCredentials(Credentials):
         return "athena"
 
     def _connection_keys(self) -> Tuple[str]:
-        return ("s3_staging_dir", "catalog", "database", "region_name")
+        return ("s3_staging_dir", "database", "schema", "region_name")
 
 
 class CursorWrapper(object):
@@ -164,8 +164,7 @@ class AthenaConnectionManager(SQLConnectionManager):
         conn = connect(
             s3_staging_dir=credentials.s3_staging_dir,
             region_name=credentials.region_name,
-            # PyAthena uses the `schema_name` for the name of the aws catalog
-            schema_name=credentials.catalog,
+            schema_name=credentials.schema,
             cursor_class=AsyncCursor,
             retry_config=RetryConfig(
                 attempt=credentials.max_retry_number,

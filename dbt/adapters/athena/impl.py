@@ -1,8 +1,8 @@
-from dbt.adapters.sql import SQLAdapter
+import agate
+
 from dbt.adapters.athena import AthenaConnectionManager
 from dbt.adapters.athena.relation import AthenaRelation
-
-import agate
+from dbt.adapters.sql import SQLAdapter
 
 
 class AthenaAdapter(SQLAdapter):

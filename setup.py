@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-from setuptools import find_packages
-from distutils.core import setup
 import os
+from distutils.core import setup
+
+from setuptools import find_packages
 
 this_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(this_directory, 'README.md')) as f:
@@ -9,7 +10,7 @@ with open(os.path.join(this_directory, 'README.md')) as f:
 
 
 package_name = "dbt-athena"
-package_version = "0.15.1"
+package_version = "0.15.3"
 description = """The athena adpter plugin for dbt (data build tool)"""
 
 setup(
