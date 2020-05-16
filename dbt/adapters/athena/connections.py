@@ -1,11 +1,9 @@
-from collections import Iterable
 from contextlib import contextmanager
 from datetime import datetime
-from getpass import getuser
 import re
 import decimal
 from dataclasses import dataclass
-from typing import Tuple, Optional
+from typing import Tuple
 
 from dbt.adapters.base import Credentials
 from dbt.adapters.sql import SQLConnectionManager
@@ -30,21 +28,14 @@ class AthenaCredentials(Credentials):
     max_retry_number: int = 5
     max_retry_delay: int = 100
 
-    _ALIASES = {
-        'catalog': 'database'
-    }
+    _ALIASES = {"catalog": "database"}
 
     @property
     def type(self) -> str:
-        return 'athena'
+        return "athena"
 
     def _connection_keys(self) -> Tuple[str]:
-        return (
-            's3_staging_dir',
-            'database',
-            'schema',
-            'region_name'
-        )
+        return ("s3_staging_dir", "database", "schema", "region_name")
 
 
 class CursorWrapper(object):
@@ -95,16 +86,16 @@ class CursorWrapper(object):
         I think "'" (a single quote) is the only character that matters.
         """
         if value is None:
-            return 'NULL'
+            return "NULL"
         elif isinstance(value, str):
             return "'{}'".format(value.replace("'", "''"))
-        elif isinstance(value, (int,float,decimal.Decimal)):
+        elif isinstance(value, (int, float, decimal.Decimal)):
             return value
         elif isinstance(value, datetime):
-            time_formatted = value.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+            time_formatted = value.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
             return "TIMESTAMP '{}'".format(time_formatted)
         else:
-            raise ValueError('Cannot escape {}'.format(type(value)))
+            raise ValueError("Cannot escape {}".format(type(value)))
 
 
 class ConnectionWrapper(object):
@@ -115,9 +106,9 @@ class ConnectionWrapper(object):
         - provide `cancel()` on the same object as `commit()`/`rollback()`/...
 
     """
+
     def __init__(self, handle, max_workers: int):
         self.handle = handle
-        # TODO: make it configurable through Athena credentials!
         self._cursor = handle.cursor(max_workers=max_workers)
 
     def cursor(self):
@@ -139,7 +130,7 @@ class ConnectionWrapper(object):
 
 
 class AthenaConnectionManager(SQLConnectionManager):
-    TYPE = 'athena'
+    TYPE = "athena"
 
     @contextmanager
     def exception_handler(self, sql: str):
@@ -166,8 +157,8 @@ class AthenaConnectionManager(SQLConnectionManager):
 
     @classmethod
     def open(cls, connection):
-        if connection.state == 'open':
-            logger.debug('Connection is already open, skipping open.')
+        if connection.state == "open":
+            logger.debug("Connection is already open, skipping open.")
             return connection
 
         credentials = connection.credentials
@@ -177,24 +168,26 @@ class AthenaConnectionManager(SQLConnectionManager):
             region_name=credentials.region_name,
             schema_name=credentials.database,
             cursor_class=AsyncCursor,
-            retry_config=RetryConfig(attempt=credentials.max_retry_number, max_delay=credentials.max_retry_delay)
+            retry_config=RetryConfig(
+                attempt=credentials.max_retry_number,
+                max_delay=credentials.max_retry_delay,
+            ),
         )
-        connection.state = 'open'
+        connection.state = "open"
         connection.handle = ConnectionWrapper(conn, credentials.threads)
         return connection
 
     @classmethod
     def get_status(cls, cursor):
         if cursor.state == AthenaQueryExecution.STATE_SUCCEEDED:
-            return 'OK'
+            return "OK"
         else:
-            return 'ERROR'
+            return "ERROR"
 
     def cancel(self, connection):
         connection.handle.cancel()
 
-    def add_query(self, sql, auto_begin=True,
-                  bindings=None, abridge_sql_log=False):
+    def add_query(self, sql, auto_begin=True, bindings=None, abridge_sql_log=False):
 
         connection = None
         cursor = None
@@ -202,31 +195,31 @@ class AthenaConnectionManager(SQLConnectionManager):
         # TODO: is this sufficient? Largely copy+pasted from snowflake, so
         # there's some common behavior here we can maybe factor out into the
         # SQLAdapter?
-        queries = [q.rstrip(';') for q in sqlparse.split(sql)]
+        queries = [q.rstrip(";") for q in sqlparse.split(sql)]
 
         for individual_query in queries:
             # hack -- after the last ';', remove comments and don't run
             # empty queries. this avoids using exceptions as flow control,
             # and also allows us to return the status of the last cursor
             without_comments = re.sub(
-                re.compile('^.*(--.*)$', re.MULTILINE),
-                '', individual_query).strip()
+                re.compile("^.*(--.*)$", re.MULTILINE), "", individual_query
+            ).strip()
 
             if without_comments == "":
                 continue
 
             parent = super(AthenaConnectionManager, self)
             connection, cursor = parent.add_query(
-                individual_query, auto_begin, bindings,
-                abridge_sql_log
+                individual_query, auto_begin, bindings, abridge_sql_log
             )
 
         if cursor is None:
             raise RuntimeException(
-                    "Tried to run an empty query on model '{}'. If you are "
-                    "conditionally running\nsql, eg. in a model hook, make "
-                    "sure your `else` clause contains valid sql!\n\n"
-                    "Provided SQL:\n{}".format(connection.name, sql))
+                "Tried to run an empty query on model '{}'. If you are "
+                "conditionally running\nsql, eg. in a model hook, make "
+                "sure your `else` clause contains valid sql!\n\n"
+                "Provided SQL:\n{}".format(connection.name, sql)
+            )
 
         return connection, cursor
 

@@ -1,4 +1,4 @@
-from dbt.adapters.base.relation import BaseRelation, RelationType, Policy
+from dbt.adapters.base.relation import BaseRelation, Policy
 from dataclasses import dataclass
 
 
@@ -18,7 +18,7 @@ class AthenaIncludePolicy(Policy):
 
 @dataclass(frozen=True, eq=False, repr=False)
 class AthenaRelation(BaseRelation):
-    quote_character: str = ''
+    quote_character: str = ""
     include_policy: Policy = AthenaIncludePolicy()
     quote_policy: Policy = AthenaQuotePolicy()
-    sql_before_create: str = ''
+    sql_before_create: str = ""
