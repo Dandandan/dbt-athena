@@ -25,10 +25,10 @@ A dbt profile can be configured to run against Athena using the following config
 
 **Example profiles.yml entry:**
 ```
-my-athena-db:
-  target: awscatalog
+athena_db:
+  target: athena_db
   outputs:
-    awscatalog:
+    athena_db:
       type: athena
       database: awscatalog
       schema: dbt_dbanin
