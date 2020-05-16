@@ -1,6 +1,6 @@
 ## dbt-athena
 
-Warning: this adapter still has rough edges.
+Warning: this adapter is work in progress, contributions welcome!.
 
 ### Installation
 This plugin can be installed via pip:
