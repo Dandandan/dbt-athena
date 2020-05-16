@@ -1,5 +1,6 @@
-from dbt.adapters.base.relation import BaseRelation, Policy
 from dataclasses import dataclass
+
+from dbt.adapters.base.relation import BaseRelation, Policy
 
 
 @dataclass

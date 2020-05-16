@@ -1,14 +1,9 @@
-from contextlib import contextmanager
-from datetime import datetime
-import re
 import decimal
+import re
+from contextlib import contextmanager
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Tuple
-
-from dbt.adapters.base import Credentials
-from dbt.adapters.sql import SQLConnectionManager
-from dbt.exceptions import RuntimeException
-from dbt.logger import GLOBAL_LOGGER as logger
 
 import sqlparse
 from pyathena import connect
@@ -16,6 +11,11 @@ from pyathena.async_cursor import AsyncCursor
 from pyathena.error import OperationalError
 from pyathena.model import AthenaQueryExecution
 from pyathena.util import RetryConfig
+
+from dbt.adapters.base import Credentials
+from dbt.adapters.sql import SQLConnectionManager
+from dbt.exceptions import RuntimeException
+from dbt.logger import GLOBAL_LOGGER as logger
 
 
 @dataclass
@@ -27,8 +27,6 @@ class AthenaCredentials(Credentials):
     threads: int = 1
     max_retry_number: int = 5
     max_retry_delay: int = 100
-
-    _ALIASES = {"catalog": "database"}
 
     @property
     def type(self) -> str:
@@ -166,7 +164,7 @@ class AthenaConnectionManager(SQLConnectionManager):
         conn = connect(
             s3_staging_dir=credentials.s3_staging_dir,
             region_name=credentials.region_name,
-            schema_name=credentials.database,
+            schema_name=credentials.schema,
             cursor_class=AsyncCursor,
             retry_config=RetryConfig(
                 attempt=credentials.max_retry_number,

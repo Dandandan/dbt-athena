@@ -15,8 +15,8 @@ A dbt profile can be configured to run against Athena using the following config
 | Option  | Description                                        | Required?               | Example                  |
 |---------|----------------------------------------------------|-------------------------|--------------------------|
 | s3_staging_dir  | The location where Athena stores meta info | Required  | s3://bucket/staging |
-| database  | Specify the database to build models into | Required  | `awscatalog` |
-| schema  | Specify the schema to build models into | Required | `dbt_drew` |
+| schema  | Specify the schema (athena database) to build models into | Required | `dev` |
+| database  | Data catalog | Required | `awsdatacatalog` |
 | region_name | Specify in which AWS region it should connect | Required | `eu-west-1` |
 | threads    | How many threads dbt should use | Optional(default=`1`) | `8` |
 | max_retry_number | Number for retries for exponential backoff | Optional(default=`5`) | `8` |
@@ -25,15 +25,16 @@ A dbt profile can be configured to run against Athena using the following config
 
 **Example profiles.yml entry:**
 ```
-athena_db:
-  target: athena_db
+athena:
+  target: athena
   outputs:
-    athena_db:
+    athena:
       type: athena
-      database: awscatalog
-      schema: dbt_dbanin
+      database: awsdatacatalog
+      schema: dev
       region_name: eu-west-1
       threads: 8
+      s3_staging_dir: s3://athena-staging-bucket/
 ```
 
 ### Usage Notes
