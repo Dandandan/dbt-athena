@@ -10,7 +10,7 @@ $ pip install git+https://github.com/Dandandan/dbt-athena.git
 
 ### Configuring your profile
 
-A dbt profile can be configured to run against Presto using the following configuration:
+A dbt profile can be configured to run against Athena using the following configuration:
 
 | Option  | Description                                        | Required?               | Example                  |
 |---------|----------------------------------------------------|-------------------------|--------------------------|
@@ -40,12 +40,12 @@ my-athena-db:
 
 #### Supported Functionality
 Due to the nature of Athena, not all core dbt functionality is supported.
-The following features of dbt are not implemented on Presto:
+The following features of dbt are not implemented on Athena:
 - Archival
 - Incremental models
 
 
-If you are interested in helping to add support for this functionality in dbt on Presto, please [open an issue](https://github.com/Dandandan/dbt-athena/issues/new)!
+If you are interested in helping to add support for this functionality in dbt on Athena, please [open an issue](https://github.com/Dandandan/dbt-athena/issues/new)!
 
 Known issues:
 
