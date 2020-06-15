@@ -10,7 +10,7 @@ with open(os.path.join(this_directory, "README.md")) as f:
 
 
 package_name = "dbt-athena"
-package_version = "0.15.3"
+package_version = "0.16.1"
 description = """The athena adpter plugin for dbt (data build tool)"""
 
 setup(
