@@ -1,0 +1,10 @@
+athena:
+    target: ci
+    outputs:
+      ci:
+        type: athena
+        database: awsdatacatalog
+        schema: dbt_athena_integration_tests
+        region_name: '{{ env_var("AWS_DEFAULT_REGION") }}'
+        threads: 4
+        s3_staging_dir: '{{ env_var("ATHENA_S3_STAGING_DIR") }}'
