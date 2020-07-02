@@ -88,7 +88,7 @@ Steps:
 
 2. Run the tests:
 
-  You might need to, additionally, set the `AWS_PROFILE` environment variables
+  _Additionally, you might need to set the `AWS_PROFILE` environment variable_
 
   ```bash
   AWS_DEFAULT_REGION=us-west-2 ATHENA_S3_STAGING_DIR=s3://dbt-athena-integration-tests/tests/ DBT_PROFILES_DIR=$(pwd)/test/integration/ tox -e integration-athena
