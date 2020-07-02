@@ -56,6 +56,44 @@ Known issues:
 
 -   Want to report a bug or request a feature? Let us know on [Slack](http://slack.getdbt.com/), or open [an issue](https://github.com/Dandandan/dbt-athena/issues/new).
 
+### Running the tests
+
+#### Unit tests
+
+1. Install tox:
+
+  ```bash
+  pip install tox
+  ```
+
+2. Run unit tests:
+
+  ```bash
+  tox -e unit
+  ```
+
+#### Integration tests
+
+At this time, an AWS account is not provided in order to run the tests in CI. We kindly ask contributors/reviewers to use their own AWS accounts in order to test contributions.
+
+You can also reach out in the [Slack](http://slack.getdbt.com/) `#athena` channel for someone to run the tests for you.
+
+Steps:
+
+1. Clone the [dbt-integration-tests](https://github.com/fishtown-analytics/dbt-integration-tests) repository
+
+  ```bash
+  git clone --branch athena-support https://github.com/EarnestResearch/dbt-integration-tests.git
+  ```
+
+2. Run the tests:
+
+  You might need to, additionally, set the `AWS_PROFILE` environment variables
+
+  ```bash
+  AWS_DEFAULT_REGION=us-west-2 ATHENA_S3_STAGING_DIR=s3://dbt-athena-integration-tests/tests/ DBT_PROFILES_DIR=$(pwd)/test/integration/ tox -e integration-athena
+  ```
+
 ## Code of Conduct
 
 Everyone interacting in the dbt project's codebases, issue trackers, chat rooms, and mailing lists is expected to follow the [PyPA Code of Conduct](https://www.pypa.io/en/latest/code-of-conduct/).
