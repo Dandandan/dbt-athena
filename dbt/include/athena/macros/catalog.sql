@@ -44,7 +44,7 @@
             where "columns"."table_schema" != 'information_schema'
             and (
             {%- for schema in schemas -%}
-              upper("table_schema") = upper('{{ schema }}'){%- if not loop.last %} or {% endif -%}
+              upper("tables"."table_schema") = upper('{{ schema }}'){%- if not loop.last %} or {% endif -%}
             {%- endfor -%}
             )
             order by "column_index"

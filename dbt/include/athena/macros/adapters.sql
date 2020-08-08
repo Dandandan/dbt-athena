@@ -38,7 +38,7 @@
 {% endmacro %}
 
 
-{% macro athena__list_relations_without_caching(information_schema, schema) %}
+{% macro athena__list_relations_without_caching(relation) %}
   {% call statement('list_relations_without_caching', fetch_result=True) -%}
     select
       table_catalog as database,
@@ -48,8 +48,8 @@
            when table_type = 'VIEW' then 'view'
            else table_type
       end as table_type
-    from {{ information_schema }}.tables
-    where {{ presto_ilike('table_schema', schema) }}
+    from {{ relation.information_schema() }}.tables
+    where {{ presto_ilike('table_schema', relation.schema) }}
   {% endcall %}
   {{ return(load_result('list_relations_without_caching').table) }}
 {% endmacro %}
@@ -80,11 +80,15 @@
 {% endmacro %}
 
 
-{% macro athena__drop_schema(database_name, schema_name) -%}
+{% macro athena__drop_schema(relation) -%}
+  {% for relation in adapter.list_relations(relation.database, relation.schema) %}
+    {% do drop_relation(relation) %}
+  {% endfor %}
   {%- call statement('drop_schema') -%}
-    drop schema if exists {{schema_name}}
+    drop schema if exists {{ relation }}
   {% endcall %}
 {% endmacro %}
+
 {% macro athena__create_schema(database_name, schema_name) -%}
   {%- call statement('create_schema') -%}
     create schema if not exists {{schema_name}}
@@ -122,3 +126,15 @@
   {%- endcall %}
   {{ return(load_result('check_schema_exists').table) }}
 {% endmacro %}
+
+{% macro athena__generate_database_name(custom_database_name=none, node=none) -%}
+  {% do return(None) %}
+{%- endmacro %}
+
+{% macro athena__information_schema_name(database) -%}
+  -- {%- if database -%}
+  --   {{ database }}.INFORMATION_SCHEMA
+  -- {%- else -%}
+    INFORMATION_SCHEMA
+  -- {%- endif -%}
+{%- endmacro %}
