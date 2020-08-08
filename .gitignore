@@ -1,3 +1,5 @@
 *.egg-info
 env/
 __pycache__/
+dbt-integration-tests/
+.user.yml
