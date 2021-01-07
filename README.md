@@ -1,6 +1,7 @@
 ## dbt-athena
 
-Warning: this adapter is work in progress, contributions welcome!
+## Note: this repository is not actively maintained. You can find a newer version of the adapter with Athena Engine 2 support, seeds and more in the following repository:
+## https://github.com/Tomme/dbt-athena/
 
 ### Installation
 This plugin can be installed via pip:
